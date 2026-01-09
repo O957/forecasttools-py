@@ -1,0 +1,390 @@
+---
+title: Constants & Hub Location Utilities
+format: gfm
+engine: jupyter
+---
+
+This notebook demonstrates the constants and hub location utilities provided by `forecasttools`. These utilities standardize common values used across CDC respiratory disease forecast hubs and simplify working with hub-specific location requirements.
+
+## Overview
+
+The `forecasttools` package provides:
+
+1. **Constants** for hubverse workflows (quantile levels, horizons, disease mappings)
+2. **Hub-Specific Location Lists** for FluSight, COVID-19, and RSV hubs
+3. **Utility Functions** to retrieve and filter by hub locations
+
+---
+
+## Setup
+
+```{python}
+import forecasttools
+import polars as pl
+from rich import print
+from rich.table import Table
+from rich.console import Console
+
+console = Console()
+```
+
+## Constants
+
+### Hubverse Quantile Levels
+
+The standard 23 quantile levels required for hubverse submissions:
+
+```{python}
+table = Table(title="Hubverse Quantile Levels (23 levels)")
+table.add_column("Index", style="dim")
+table.add_column("Quantile", style="cyan")
+
+for i, q in enumerate(forecasttools.HUBVERSE_QUANTILE_LEVELS, 1):
+    table.add_row(str(i), str(q))
+
+console.print(table)
+```
+
+### Standard Forecast Horizons
+
+The standard forecast horizons for weekly submissions:
+
+```{python}
+table = Table(title="Standard Forecast Horizons")
+table.add_column("Horizon", style="cyan")
+table.add_column("Meaning", style="green")
+
+horizon_meanings = {
+    -1: "nowcast (previous week)",
+    0: "current week",
+    1: "1 week ahead",
+    2: "2 weeks ahead",
+    3: "3 weeks ahead",
+}
+
+for h in forecasttools.STANDARD_HORIZONS:
+    table.add_row(str(h), horizon_meanings[h])
+
+console.print(table)
+```
+
+### Disease Mappings
+
+#### NHSN Column Names
+
+Maps disease identifiers to the corresponding column names in NHSN hospitalization data:
+
+```{python}
+table = Table(title="Disease to NHSN Column Mapping")
+table.add_column("Disease", style="cyan")
+table.add_column("NHSN Column", style="green")
+
+for disease, column in forecasttools.DISEASE_NHSN_COLUMNS.items():
+    table.add_row(disease, column)
+
+console.print(table)
+```
+
+#### Hubverse Target Names
+
+Maps disease identifiers to the hubverse target strings used in submissions. Each disease has two target types: `hosp` (NHSN hospitalization data) and `ed` (NSSP ED visit proportion data).
+
+```{python}
+table = Table(title="Disease Targets")
+table.add_column("Disease", style="cyan")
+table.add_column("Type", style="yellow")
+table.add_column("Target String", style="green")
+
+for disease, targets in forecasttools.DISEASE_TARGETS.items():
+    for target_type, target in targets.items():
+        table.add_row(disease, target_type, target)
+
+console.print(table)
+```
+
+#### Valid Diseases and Target Types
+
+```{python}
+print(f"[bold]Valid disease identifiers:[/bold] {forecasttools.VALID_DISEASES}")
+print(f"[bold]Valid target types:[/bold] {forecasttools.VALID_TARGET_TYPES}")
+```
+
+### Submission Column Order
+
+The required column order for hubverse submission files:
+
+```{python}
+table = Table(title="Hubverse Submission Columns (in order)")
+table.add_column("#", style="dim")
+table.add_column("Column Name", style="cyan")
+
+for i, col in enumerate(forecasttools.HUBVERSE_SUBMISSION_COLUMNS, 1):
+    table.add_row(str(i), col)
+
+console.print(table)
+```
+
+---
+
+## Hub Location Lists
+
+Each CDC forecast hub accepts submissions for a specific set of locations. These are provided as constants.
+
+### Official Hub Location Specifications
+
+The location requirements for each hub are defined in their respective `hub-config/tasks.json` files. The hub URLs are available as constants:
+
+```{python}
+table = Table(title="CDC Forecast Hub URLs")
+table.add_column("Hub", style="cyan")
+table.add_column("Repository URL", style="green")
+
+for hub, url in forecasttools.HUB_URLS.items():
+    table.add_row(hub, url)
+
+console.print(table)
+```
+
+**FluSight (Influenza) Hub**
+
+> Locations are specified in the [FluSight-forecast-hub tasks.json](https://github.com/cdcepi/FluSight-forecast-hub/blob/main/hub-config/tasks.json). The hub accepts forecasts for 50 US states, the District of Columbia, Puerto Rico, and a national aggregate (US).
+
+**COVID-19 Forecast Hub**
+
+> Locations are specified in the [COVID-19-Forecast-Hub tasks.json](https://github.com/CDCgov/COVID-19-Forecast-Hub/blob/main/hub-config/tasks.json). The location set matches FluSight: 50 states + DC + PR + US national.
+
+**RSV Forecast Hub**
+
+> Locations are specified in the [rsv-forecast-hub tasks.json](https://github.com/CDCgov/rsv-forecast-hub/blob/main/hub-config/tasks.json). The location set matches FluSight and COVID-19: 50 states + DC + PR + US national.
+
+---
+
+### All US Jurisdictions
+
+For modelers who need all US jurisdictions (not just hub-specific subsets), forecasttools provides location codes derived from Census data via `location_table`:
+
+```{python}
+table = Table(title="All US Location Codes (from location_table)")
+table.add_column("Constant", style="cyan")
+table.add_column("Count", style="green")
+table.add_column("Description", style="yellow")
+
+table.add_row("ALL_LOCATION_CODES", str(len(forecasttools.ALL_LOCATION_CODES)), "All 58 US jurisdictions")
+table.add_row("STATE_LOCATION_CODES", str(len(forecasttools.STATE_LOCATION_CODES)), "50 US states")
+table.add_row("TERRITORY_LOCATION_CODES", str(len(forecasttools.TERRITORY_LOCATION_CODES)), "DC + 6 territories")
+
+console.print(table)
+```
+
+```{python}
+print("[bold]Territories:[/bold]")
+for code in forecasttools.TERRITORY_LOCATION_CODES:
+    row = forecasttools.location_table.filter(pl.col("location_code") == code)
+    name = row.get_column("long_name")[0]
+    abbr = row.get_column("short_name")[0]
+    print(f"  {code}: {abbr} ({name})")
+```
+
+---
+
+### Hub Location Summary
+
+```{python}
+table = Table(title="Hub Location Lists")
+table.add_column("Hub", style="cyan")
+table.add_column("Count", style="green")
+table.add_column("Description", style="yellow")
+
+table.add_row("FluSight", str(len(forecasttools.FLUSIGHT_LOCATIONS)), "50 states + DC + PR + US")
+table.add_row("COVID-19", str(len(forecasttools.COVID_HUB_LOCATIONS)), "50 states + DC + PR + US")
+table.add_row("RSV", str(len(forecasttools.RSV_HUB_LOCATIONS)), "50 states + DC + PR + US")
+
+console.print(table)
+
+# check if all are the same
+all_same = (
+    forecasttools.FLUSIGHT_LOCATIONS
+    == forecasttools.COVID_HUB_LOCATIONS
+    == forecasttools.RSV_HUB_LOCATIONS
+)
+print(f"\n[bold]All hubs have identical location lists:[/bold] {all_same}")
+```
+
+### HUB_LOCATIONS Dictionary
+
+Access location lists by hub name:
+
+```{python}
+table = Table(title="HUB_LOCATIONS Dictionary")
+table.add_column("Key", style="cyan")
+table.add_column("Locations", style="green")
+
+for hub, locations in forecasttools.HUB_LOCATIONS.items():
+    table.add_row(hub, str(len(locations)))
+
+console.print(table)
+```
+
+---
+
+## Utility Functions
+
+### get_hub_locations()
+
+Retrieve the list of valid location codes for a specific hub:
+
+```{python}
+flusight_locs = forecasttools.get_hub_locations("flusight")
+covid_locs = forecasttools.get_hub_locations("covid")
+rsv_locs = forecasttools.get_hub_locations("rsv")
+
+table = Table(title="get_hub_locations() Results")
+table.add_column("Hub", style="cyan")
+table.add_column("Count", style="green")
+
+table.add_row("flusight", str(len(flusight_locs)))
+table.add_row("covid", str(len(covid_locs)))
+table.add_row("rsv", str(len(rsv_locs)))
+
+console.print(table)
+```
+
+The function is case-insensitive:
+
+```{python}
+locs1 = forecasttools.get_hub_locations("flusight")
+locs2 = forecasttools.get_hub_locations("FluSight")
+locs3 = forecasttools.get_hub_locations("FLUSIGHT")
+print(f"[bold]Case insensitive:[/bold] {locs1 == locs2 == locs3}")
+```
+
+Invalid hub names raise a helpful error:
+
+```{python}
+try:
+    forecasttools.get_hub_locations("invalid_hub")
+except ValueError as e:
+    print(f"[red]ValueError:[/red] {e}")
+```
+
+### filter_to_hub_locations()
+
+Filter a DataFrame to only include rows with valid hub locations:
+
+```{python}
+# create sample data with various locations
+sample_data = pl.DataFrame({
+    "location": ["01", "02", "72", "78", "99", "US"],
+    "value": [100, 200, 300, 400, 500, 600],
+    "state_name": ["Alabama", "Alaska", "Puerto Rico", "Virgin Islands", "Invalid", "United States"]
+})
+
+print("[bold]Original data:[/bold]")
+print(sample_data)
+```
+
+```{python}
+# filter to FluSight locations
+flusight_filtered = forecasttools.filter_to_hub_locations(
+    sample_data,
+    hub="flusight",
+    location_col="location"
+)
+
+print("[bold]Filtered to FluSight locations:[/bold]")
+print(flusight_filtered)
+```
+
+---
+
+## Example: Building a Submission Workflow
+
+Here's how these utilities can be used together in a forecast submission workflow:
+
+```{python}
+# 1. define the disease and hub
+disease = "flu"
+hub = "flusight"
+
+# 2. get the target name and valid locations
+target = forecasttools.DISEASE_TARGETS[disease]
+valid_locations = forecasttools.get_hub_locations(hub)
+
+print(f"[bold]Disease:[/bold] {disease}")
+print(f"[bold]Hub:[/bold] {hub}")
+print(f"[bold]Target:[/bold] {target}")
+print(f"[bold]Valid locations:[/bold] {len(valid_locations)}")
+```
+
+```{python}
+# 3. create a sample forecast DataFrame (in practice, from your model)
+sample_forecast = pl.DataFrame({
+    "location": ["01", "02", "06", "99"],  # includes one invalid
+    "horizon": [0, 0, 0, 0],
+    "quantile_level": [0.5, 0.5, 0.5, 0.5],
+    "value": [100.0, 50.0, 500.0, 999.0]
+})
+
+# 4. filter to valid hub locations
+filtered_forecast = forecasttools.filter_to_hub_locations(
+    sample_forecast,
+    hub=hub,
+    location_col="location"
+)
+
+print(f"[bold]Original rows:[/bold] {len(sample_forecast)}")
+print(f"[bold]After filtering:[/bold] {len(filtered_forecast)}")
+print(filtered_forecast)
+```
+
+```{python}
+# 5. verify quantile levels match hubverse requirements
+model_quantiles = [0.01, 0.025, 0.05, 0.5, 0.95, 0.975, 0.99]
+required_quantiles = forecasttools.HUBVERSE_QUANTILE_LEVELS
+
+missing = set(required_quantiles) - set(model_quantiles)
+
+table = Table(title="Quantile Level Verification")
+table.add_column("Metric", style="cyan")
+table.add_column("Value", style="green")
+
+table.add_row("Required quantile levels", str(len(required_quantiles)))
+table.add_row("Model quantile levels", str(len(model_quantiles)))
+table.add_row("Missing quantiles", str(len(missing)))
+
+console.print(table)
+```
+
+---
+
+## Summary
+
+```{python}
+table = Table(title="forecasttools Constants & Functions Summary")
+table.add_column("Name", style="cyan")
+table.add_column("Description", style="green")
+
+summary_data = [
+    ("HUBVERSE_QUANTILE_LEVELS", "23 standard quantile levels"),
+    ("STANDARD_HORIZONS", "[-1, 0, 1, 2, 3] forecast horizons"),
+    ("DISEASE_NHSN_COLUMNS", "Maps disease to NHSN column names"),
+    ("DISEASE_TARGETS", "Maps disease to hubverse target names (hosp + ed)"),
+    ("HUBVERSE_SUBMISSION_COLUMNS", "Required column order"),
+    ("HUB_URLS", "CDC forecast hub repository URLs"),
+    ("HUB_TASKS_JSON_URLS", "Hub tasks.json URLs (location specs)"),
+    ("ALL_LOCATION_CODES", "All 58 US jurisdiction FIPS codes"),
+    ("STATE_LOCATION_CODES", "50 US state FIPS codes"),
+    ("TERRITORY_LOCATION_CODES", "DC + 6 territory FIPS codes"),
+    ("FLUSIGHT_LOCATIONS", "53 FluSight hub locations"),
+    ("COVID_HUB_LOCATIONS", "53 COVID-19 hub locations"),
+    ("RSV_HUB_LOCATIONS", "53 RSV hub locations"),
+    ("location_table", "DataFrame with all jurisdiction metadata"),
+    ("get_hub_locations(hub)", "Get locations for a hub"),
+    ("filter_to_hub_locations(df, hub)", "Filter DataFrame to hub locations"),
+]
+
+for name, desc in summary_data:
+    table.add_row(name, desc)
+
+console.print(table)
+```

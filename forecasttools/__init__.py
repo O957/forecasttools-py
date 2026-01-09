@@ -3,6 +3,21 @@ import importlib.resources
 import arviz as az
 import polars as pl
 
+from forecasttools.constants import (
+    COVID_HUB_LOCATIONS,
+    DISEASE_NHSN_COLUMNS,
+    DISEASE_TARGETS,
+    FLUSIGHT_LOCATIONS,
+    HUB_LOCATIONS,
+    HUB_TASKS_JSON_URLS,
+    HUB_URLS,
+    HUBVERSE_QUANTILE_LEVELS,
+    HUBVERSE_SUBMISSION_COLUMNS,
+    RSV_HUB_LOCATIONS,
+    STANDARD_HORIZONS,
+    VALID_DISEASES,
+    VALID_TARGET_TYPES,
+)
 from forecasttools.daily_to_epiweekly import df_aggregate_to_epiweekly
 from forecasttools.pull_data_cdc_gov import (
     data_cdc_gov_datasets,
@@ -11,6 +26,8 @@ from forecasttools.pull_data_cdc_gov import (
     get_nhsn,
 )
 from forecasttools.recode_locations import (
+    filter_to_hub_locations,
+    get_hub_locations,
     loc_abbr_to_hubverse_code,
     loc_hubverse_code_to_abbr,
     location_lookup,
@@ -30,11 +47,24 @@ from forecasttools.utils import (
 
 from . import arviz
 
-# location table (from Census data; contains territory data)
+# location table (from Census data; contains all US jurisdictions)
 location_table_path = importlib.resources.files(__package__).joinpath(
     "location_table.parquet"
 )
 location_table = pl.read_parquet(location_table_path)
+
+# derived location lists from location_table (all US jurisdictions)
+ALL_LOCATION_CODES: list[str] = location_table.get_column("location_code").to_list()
+STATE_LOCATION_CODES: list[str] = (
+    location_table.filter(pl.col("is_state")).get_column("location_code").to_list()
+)
+TERRITORY_LOCATION_CODES: list[str] = (
+    location_table.filter(~pl.col("is_state") & (pl.col("location_code") != "US"))
+    .get_column("location_code")
+    .to_list()
+)
+
+# state names (for backwards compatibility)
 united_states = (
     location_table.filter(pl.col("is_state")).get_column("long_name").to_list()
 )
@@ -76,6 +106,7 @@ nhsn_flu_forecast_w_dates = az.from_netcdf(example_flu_forecast_w_dates_path)
 
 
 __all__ = [
+    # data tables
     "location_table",
     "united_states",
     "example_flusight_submission",
@@ -83,12 +114,33 @@ __all__ = [
     "nhsn_hosp_flu",
     "nhsn_flu_forecast_wo_dates",
     "nhsn_flu_forecast_w_dates",
+    # constants
+    "HUBVERSE_QUANTILE_LEVELS",
+    "STANDARD_HORIZONS",
+    "DISEASE_NHSN_COLUMNS",
+    "DISEASE_TARGETS",
+    "VALID_DISEASES",
+    "VALID_TARGET_TYPES",
+    "HUBVERSE_SUBMISSION_COLUMNS",
+    "HUB_URLS",
+    "HUB_TASKS_JSON_URLS",
+    "FLUSIGHT_LOCATIONS",
+    "COVID_HUB_LOCATIONS",
+    "RSV_HUB_LOCATIONS",
+    "HUB_LOCATIONS",
+    # location codes (derived from location_table)
+    "ALL_LOCATION_CODES",
+    "STATE_LOCATION_CODES",
+    "TERRITORY_LOCATION_CODES",
+    # functions
     "trajectories_to_quantiles",
     "df_aggregate_to_epiweekly",
     "loc_abbr_to_hubverse_code",
     "loc_hubverse_code_to_abbr",
     "to_location_table_column",
     "location_lookup",
+    "get_hub_locations",
+    "filter_to_hub_locations",
     "get_hubverse_table",
     "validate_input_type",
     "validate_and_get_idata_group",

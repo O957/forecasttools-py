@@ -7,6 +7,7 @@ codes or two-letter abbreviations.
 import polars as pl
 
 import forecasttools
+from forecasttools.constants import HUB_LOCATIONS
 
 
 def loc_abbr_to_hubverse_code(df: pl.DataFrame, location_col: str) -> pl.DataFrame:
@@ -236,3 +237,78 @@ def location_lookup(location_vector: list[str], location_format: str) -> pl.Data
     # based on the join key
     locs = locs_df.join(forecasttools.location_table, on=join_key, how="inner")
     return locs
+
+
+def get_hub_locations(hub: str = "flusight") -> list[str]:
+    """
+    Get list of valid location codes for a forecast hub.
+
+    Parameters
+    ----------
+    hub : str
+        Hub name: "flusight", "covid", or "rsv".
+
+    Returns
+    -------
+    list[str]
+        List of valid FIPS location codes for the specified hub.
+
+    Raises
+    ------
+    ValueError
+        If hub is not one of the valid hub names.
+    """
+    if not isinstance(hub, str):
+        raise TypeError(f"Expected a string for hub; got {type(hub)}.")
+    hub_lower = hub.lower()
+    if hub_lower not in HUB_LOCATIONS:
+        valid_hubs = list(HUB_LOCATIONS.keys())
+        raise ValueError(f"Unknown hub '{hub}'. Expected one of: {valid_hubs}.")
+    return HUB_LOCATIONS[hub_lower].copy()
+
+
+def filter_to_hub_locations(
+    df: pl.DataFrame,
+    hub: str = "flusight",
+    location_col: str = "location",
+) -> pl.DataFrame:
+    """
+    Filter DataFrame to only include valid hub locations.
+
+    Parameters
+    ----------
+    df : pl.DataFrame
+        DataFrame containing a location column.
+    hub : str
+        Hub name: "flusight", "covid", or "rsv".
+    location_col : str
+        Name of the location column in the DataFrame.
+
+    Returns
+    -------
+    pl.DataFrame
+        Filtered DataFrame containing only rows with valid hub locations.
+
+    Raises
+    ------
+    TypeError
+        If df is not a Polars DataFrame or location_col is not a string.
+    ValueError
+        If the DataFrame is empty, location column doesn't exist,
+        or hub is invalid.
+    """
+    if not isinstance(df, pl.DataFrame):
+        raise TypeError(f"Expected a Polars DataFrame; got {type(df)}.")
+    if not isinstance(location_col, str):
+        raise TypeError(
+            f"Expected a string for location_col; got {type(location_col)}."
+        )
+    if df.is_empty():
+        raise ValueError("The dataframe is empty.")
+    if location_col not in df.columns:
+        raise ValueError(
+            f"Column '{location_col}' not found in the dataframe; got {df.columns}."
+        )
+    valid_locations = get_hub_locations(hub)
+    filtered_df = df.filter(pl.col(location_col).is_in(valid_locations))
+    return filtered_df

@@ -18,10 +18,12 @@ dependencies = [
     "numpyro>=0.17.0",
     "numpy>=2.2.2",
     "tqdm>=4.67.1",
-    "cfasodapy",
+    "cfasodapy @ git+https://github.com/CDCgov/cfasodapy.git",
     "jax>=0.6.2",
     "scipy>=1.16.0",
     "pyarrow>=21.0.0",
+    "jupyter>=1.1.1",
+    "rich>=14.2.0",
 ]
 
 [project.optional-dependencies]
@@ -33,6 +35,7 @@ dev = [
     "nbclient>=0.10.0",
     "jupyter>=1.1.1",
     "jupyter-cache>=1.0.1",
+    "rich>=13.0.0",
 ]
 test = [
     "pytest>=8.3.3",
@@ -52,15 +55,15 @@ max-complexity = 15
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
+[tool.hatch.metadata]
+allow-direct-references = true
+
 [tool.hatch.build.targets.wheel]
 packages = ["forecasttools"]
 include = [
     "forecasttools/*.parquet",
     "forecasttools/*.nc",
 ]
-
-[tool.uv.sources]
-cfasodapy = { git = "https://github.com/CDCgov/cfasodapy.git" }
 
 [tool.deptry]
 known_first_party = ["forecasttools"]
