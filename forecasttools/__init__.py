@@ -3,6 +3,27 @@ import importlib.resources
 import arviz as az
 import polars as pl
 
+from forecasttools.constants import (
+    ALL_LOCATION_CODES,
+    COVID_HUB_LOCATIONS,
+    DC_FIPS,
+    DISEASE_NHSN_COLUMNS,
+    DISEASE_TARGETS,
+    FLUSIGHT_LOCATIONS,
+    HUB_LOCATIONS,
+    HUB_TASKS_JSON_URLS,
+    HUB_URLS,
+    HUBVERSE_QUANTILE_LEVELS,
+    HUBVERSE_SUBMISSION_COLUMNS,
+    PR_FIPS,
+    RSV_HUB_LOCATIONS,
+    STANDARD_HORIZONS,
+    STATE_LOCATION_CODES,
+    TERRITORY_LOCATION_CODES,
+    VALID_DISEASES,
+    VALID_TARGET_TYPES,
+    location_table,
+)
 from forecasttools.daily_to_epiweekly import df_aggregate_to_epiweekly
 from forecasttools.pull_data_cdc_gov import (
     data_cdc_gov_datasets,
@@ -11,6 +32,8 @@ from forecasttools.pull_data_cdc_gov import (
     get_nhsn,
 )
 from forecasttools.recode_locations import (
+    filter_to_hub_locations,
+    get_hub_locations,
     loc_abbr_to_hubverse_code,
     loc_hubverse_code_to_abbr,
     location_lookup,
@@ -30,12 +53,8 @@ from forecasttools.utils import (
 
 from . import arviz
 
-# location table (from Census data; contains territory data)
-location_table_path = importlib.resources.files(__package__).joinpath(
-    "location_table.parquet"
-)
-location_table = pl.read_parquet(location_table_path)
-united_states = (
+# state names (for backwards compatibility)
+united_states: list[str] = (
     location_table.filter(pl.col("is_state")).get_column("long_name").to_list()
 )
 
@@ -76,6 +95,7 @@ nhsn_flu_forecast_w_dates = az.from_netcdf(example_flu_forecast_w_dates_path)
 
 
 __all__ = [
+    # data tables
     "location_table",
     "united_states",
     "example_flusight_submission",
@@ -83,12 +103,36 @@ __all__ = [
     "nhsn_hosp_flu",
     "nhsn_flu_forecast_wo_dates",
     "nhsn_flu_forecast_w_dates",
+    # constants
+    "HUBVERSE_QUANTILE_LEVELS",
+    "STANDARD_HORIZONS",
+    "DISEASE_NHSN_COLUMNS",
+    "DISEASE_TARGETS",
+    "VALID_DISEASES",
+    "VALID_TARGET_TYPES",
+    "HUBVERSE_SUBMISSION_COLUMNS",
+    "HUB_URLS",
+    "HUB_TASKS_JSON_URLS",
+    # location codes (derived from location_table)
+    "ALL_LOCATION_CODES",
+    "STATE_LOCATION_CODES",
+    "TERRITORY_LOCATION_CODES",
+    "DC_FIPS",
+    "PR_FIPS",
+    # hub location lists
+    "FLUSIGHT_LOCATIONS",
+    "COVID_HUB_LOCATIONS",
+    "RSV_HUB_LOCATIONS",
+    "HUB_LOCATIONS",
+    # functions
     "trajectories_to_quantiles",
     "df_aggregate_to_epiweekly",
     "loc_abbr_to_hubverse_code",
     "loc_hubverse_code_to_abbr",
     "to_location_table_column",
     "location_lookup",
+    "get_hub_locations",
+    "filter_to_hub_locations",
     "get_hubverse_table",
     "validate_input_type",
     "validate_and_get_idata_group",

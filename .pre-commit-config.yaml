@@ -90,10 +90,13 @@ repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.14.10
     hooks:
-      # Sort imports
-      - id: ruff-check
       # Run the formatter
       - id: ruff-format
+        types_or: [python, pyi, jupyter, toml]
+      # Sort imports
+      - id: ruff-check
+        types_or: [python, pyi, jupyter, toml]
+        args: [--fix]
   - repo: https://github.com/astral-sh/uv-pre-commit
     rev: 0.9.21
     hooks:
