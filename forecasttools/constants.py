@@ -13,7 +13,6 @@ import importlib.resources
 
 import polars as pl
 
-
 _location_table_path = importlib.resources.files(__package__).joinpath(
     "location_table.parquet"
 )
