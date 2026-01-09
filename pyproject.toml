@@ -74,9 +74,13 @@ include = [
 [tool.deptry]
 known_first_party = ["forecasttools"]
 pep621_dev_dependency_groups = ["dev", "test", "docs"]
+extend_exclude = [
+    "docs/",
+    ".jupyter_cache/",
+]
 
 [tool.deptry.per_rule_ignores]
-DEP002 = ["pyarrow"]
+DEP002 = ["pyarrow", "jupyter", "rich", "patsy", "jupyter-cache", "quartodoc"]
 
 [tool.ruff]
 fix = true
