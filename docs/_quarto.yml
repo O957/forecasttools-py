@@ -57,21 +57,43 @@ quartodoc:
   dir: reference
   title: "API Reference"
   sidebar: reference/_sidebar.yml
-  style: pkgdown
   parser: numpy
   sections:
-    - title: "Main Module"
-      desc: "All public functions and constants"
+    - title: "Location Functions"
+      desc: "Functions for working with location codes"
       contents:
-        - name: forecasttools
-          children: linked
+        - get_hub_locations
+        - filter_to_hub_locations
+        - loc_abbr_to_hubverse_code
+        - loc_hubverse_code_to_abbr
+        - location_lookup
+        - to_location_table_column
+    - title: "Data Retrieval"
+      desc: "Functions for fetching CDC data"
+      contents:
+        - get_nhsn
+        - get_data_cdc_gov_dataset
+        - get_dataset_info
+    - title: "Data Processing"
+      desc: "Data transformation utilities"
+      contents:
+        - df_aggregate_to_epiweekly
+        - trajectories_to_quantiles
+        - get_hubverse_table
+        - coalesce_common_columns
     - title: "ArviZ Utilities"
       desc: "Functions for working with ArviZ InferenceData objects"
       contents:
-        - name: forecasttools.arviz
-          children: linked
-    - title: "Simulation-Based Calibration"
-      desc: "Tools for validating Bayesian inference"
+        - arviz.get_all_dims
+        - arviz.replace_all_dim_suffix
+        - arviz.assign_coords_from_start_step
+        - arviz.prune_chains_by_rel_diff
+    - title: "Validation"
+      desc: "Input validation utilities"
       contents:
-        - name: forecasttools.sbc
-          children: linked
+        - validate_input_type
+        - validate_and_get_idata_group
+        - validate_and_get_idata_group_var
+        - validate_idata_group_var_dim
+        - validate_iter_has_expected_types
+        - ensure_listlike
