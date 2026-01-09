@@ -4,7 +4,9 @@ import arviz as az
 import polars as pl
 
 from forecasttools.constants import (
+    ALL_LOCATION_CODES,
     COVID_HUB_LOCATIONS,
+    DC_FIPS,
     DISEASE_NHSN_COLUMNS,
     DISEASE_TARGETS,
     FLUSIGHT_LOCATIONS,
@@ -13,10 +15,14 @@ from forecasttools.constants import (
     HUB_URLS,
     HUBVERSE_QUANTILE_LEVELS,
     HUBVERSE_SUBMISSION_COLUMNS,
+    PR_FIPS,
     RSV_HUB_LOCATIONS,
     STANDARD_HORIZONS,
+    STATE_LOCATION_CODES,
+    TERRITORY_LOCATION_CODES,
     VALID_DISEASES,
     VALID_TARGET_TYPES,
+    location_table,
 )
 from forecasttools.daily_to_epiweekly import df_aggregate_to_epiweekly
 from forecasttools.pull_data_cdc_gov import (
@@ -47,25 +53,8 @@ from forecasttools.utils import (
 
 from . import arviz
 
-# location table (from Census data; contains all US jurisdictions)
-location_table_path = importlib.resources.files(__package__).joinpath(
-    "location_table.parquet"
-)
-location_table = pl.read_parquet(location_table_path)
-
-# derived location lists from location_table (all US jurisdictions)
-ALL_LOCATION_CODES: list[str] = location_table.get_column("location_code").to_list()
-STATE_LOCATION_CODES: list[str] = (
-    location_table.filter(pl.col("is_state")).get_column("location_code").to_list()
-)
-TERRITORY_LOCATION_CODES: list[str] = (
-    location_table.filter(~pl.col("is_state") & (pl.col("location_code") != "US"))
-    .get_column("location_code")
-    .to_list()
-)
-
 # state names (for backwards compatibility)
-united_states = (
+united_states: list[str] = (
     location_table.filter(pl.col("is_state")).get_column("long_name").to_list()
 )
 
@@ -124,14 +113,17 @@ __all__ = [
     "HUBVERSE_SUBMISSION_COLUMNS",
     "HUB_URLS",
     "HUB_TASKS_JSON_URLS",
-    "FLUSIGHT_LOCATIONS",
-    "COVID_HUB_LOCATIONS",
-    "RSV_HUB_LOCATIONS",
-    "HUB_LOCATIONS",
     # location codes (derived from location_table)
     "ALL_LOCATION_CODES",
     "STATE_LOCATION_CODES",
     "TERRITORY_LOCATION_CODES",
+    "DC_FIPS",
+    "PR_FIPS",
+    # hub location lists
+    "FLUSIGHT_LOCATIONS",
+    "COVID_HUB_LOCATIONS",
+    "RSV_HUB_LOCATIONS",
+    "HUB_LOCATIONS",
     # functions
     "trajectories_to_quantiles",
     "df_aggregate_to_epiweekly",

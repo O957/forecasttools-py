@@ -161,7 +161,14 @@ console.print(table)
 
 ### All US Jurisdictions
 
-For modelers who need all US jurisdictions (not just hub-specific subsets), forecasttools provides location codes derived from Census data via `location_table`:
+All FIPS codes in `forecasttools` are derived programmatically from `location_table.parquet` (Census data), not hardcoded. This ensures consistency and makes it easy to update if jurisdictions change.
+
+```{python}
+# the location_table is the source of truth for all FIPS codes
+print("[bold]location_table structure:[/bold]")
+print(forecasttools.location_table.head(5))
+print(f"\n[bold]Total jurisdictions:[/bold] {len(forecasttools.location_table)}")
+```
 
 ```{python}
 table = Table(title="All US Location Codes (from location_table)")
@@ -372,9 +379,11 @@ summary_data = [
     ("HUBVERSE_SUBMISSION_COLUMNS", "Required column order"),
     ("HUB_URLS", "CDC forecast hub repository URLs"),
     ("HUB_TASKS_JSON_URLS", "Hub tasks.json URLs (location specs)"),
-    ("ALL_LOCATION_CODES", "All 58 US jurisdiction FIPS codes"),
-    ("STATE_LOCATION_CODES", "50 US state FIPS codes"),
-    ("TERRITORY_LOCATION_CODES", "DC + 6 territory FIPS codes"),
+    ("ALL_LOCATION_CODES", "All 58 US jurisdiction FIPS codes (derived)"),
+    ("STATE_LOCATION_CODES", "50 US state FIPS codes (derived)"),
+    ("TERRITORY_LOCATION_CODES", "DC + 6 territory FIPS codes (derived)"),
+    ("DC_FIPS", "District of Columbia FIPS code"),
+    ("PR_FIPS", "Puerto Rico FIPS code"),
     ("FLUSIGHT_LOCATIONS", "53 FluSight hub locations"),
     ("COVID_HUB_LOCATIONS", "53 COVID-19 hub locations"),
     ("RSV_HUB_LOCATIONS", "53 RSV hub locations"),
