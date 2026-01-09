@@ -64,14 +64,14 @@ quartodoc:
       desc: "All public functions and constants"
       contents:
         - name: forecasttools
-          children: all
+          children: linked
     - title: "ArviZ Utilities"
       desc: "Functions for working with ArviZ InferenceData objects"
       contents:
         - name: forecasttools.arviz
-          members: true
+          children: linked
     - title: "Simulation-Based Calibration"
       desc: "Tools for validating Bayesian inference"
       contents:
         - name: forecasttools.sbc
-          members: true
+          children: linked
