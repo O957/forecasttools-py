@@ -1,0 +1,101 @@
+# API Reference {.doc .doc-index}
+
+## Constants
+
+Standard constants for hubverse workflows
+
+| | |
+| --- | --- |
+| [HUBVERSE_QUANTILE_LEVELS](HUBVERSE_QUANTILE_LEVELS.qmd#forecasttools.HUBVERSE_QUANTILE_LEVELS) |  |
+| [STANDARD_HORIZONS](STANDARD_HORIZONS.qmd#forecasttools.STANDARD_HORIZONS) |  |
+| [DISEASE_NHSN_COLUMNS](DISEASE_NHSN_COLUMNS.qmd#forecasttools.DISEASE_NHSN_COLUMNS) |  |
+| [DISEASE_TARGETS](DISEASE_TARGETS.qmd#forecasttools.DISEASE_TARGETS) |  |
+| [VALID_DISEASES](VALID_DISEASES.qmd#forecasttools.VALID_DISEASES) |  |
+| [VALID_TARGET_TYPES](VALID_TARGET_TYPES.qmd#forecasttools.VALID_TARGET_TYPES) |  |
+| [HUBVERSE_SUBMISSION_COLUMNS](HUBVERSE_SUBMISSION_COLUMNS.qmd#forecasttools.HUBVERSE_SUBMISSION_COLUMNS) |  |
+| [HUB_URLS](HUB_URLS.qmd#forecasttools.HUB_URLS) |  |
+| [HUB_TASKS_JSON_URLS](HUB_TASKS_JSON_URLS.qmd#forecasttools.HUB_TASKS_JSON_URLS) |  |
+
+## Location Data
+
+Location codes and hub location lists
+
+| | |
+| --- | --- |
+| [location_table](location_table.qmd#forecasttools.location_table) |  |
+| [ALL_LOCATION_CODES](ALL_LOCATION_CODES.qmd#forecasttools.ALL_LOCATION_CODES) |  |
+| [STATE_LOCATION_CODES](STATE_LOCATION_CODES.qmd#forecasttools.STATE_LOCATION_CODES) |  |
+| [TERRITORY_LOCATION_CODES](TERRITORY_LOCATION_CODES.qmd#forecasttools.TERRITORY_LOCATION_CODES) |  |
+| [DC_FIPS](DC_FIPS.qmd#forecasttools.DC_FIPS) |  |
+| [PR_FIPS](PR_FIPS.qmd#forecasttools.PR_FIPS) |  |
+| [FLUSIGHT_LOCATIONS](FLUSIGHT_LOCATIONS.qmd#forecasttools.FLUSIGHT_LOCATIONS) |  |
+| [COVID_HUB_LOCATIONS](COVID_HUB_LOCATIONS.qmd#forecasttools.COVID_HUB_LOCATIONS) |  |
+| [RSV_HUB_LOCATIONS](RSV_HUB_LOCATIONS.qmd#forecasttools.RSV_HUB_LOCATIONS) |  |
+| [HUB_LOCATIONS](HUB_LOCATIONS.qmd#forecasttools.HUB_LOCATIONS) |  |
+
+## Location Functions
+
+Functions for working with location codes
+
+| | |
+| --- | --- |
+| [get_hub_locations](get_hub_locations.qmd#forecasttools.get_hub_locations) | Get list of valid location codes for a forecast hub. |
+| [filter_to_hub_locations](filter_to_hub_locations.qmd#forecasttools.filter_to_hub_locations) | Filter DataFrame to only include valid hub locations. |
+| [loc_abbr_to_hubverse_code](loc_abbr_to_hubverse_code.qmd#forecasttools.loc_abbr_to_hubverse_code) | Takes the location column of a Polars |
+| [loc_hubverse_code_to_abbr](loc_hubverse_code_to_abbr.qmd#forecasttools.loc_hubverse_code_to_abbr) | Takes the location columns of a Polars |
+| [location_lookup](location_lookup.qmd#forecasttools.location_lookup) | Look up rows of the hubverse location |
+| [to_location_table_column](to_location_table_column.qmd#forecasttools.to_location_table_column) | Maps a location format string to the |
+
+## Data Retrieval
+
+Functions for fetching CDC data
+
+| | |
+| --- | --- |
+| [get_nhsn](get_nhsn.qmd#forecasttools.get_nhsn) | Get NHSN Hospital Respiratory Data. |
+| [get_data_cdc_gov_dataset](get_data_cdc_gov_dataset.qmd#forecasttools.get_data_cdc_gov_dataset) | Pull data from data.cdc.gov using dataset key. |
+| [get_dataset_info](get_dataset_info.qmd#forecasttools.get_dataset_info) | Look up dataset information by key. |
+| [data_cdc_gov_datasets](data_cdc_gov_datasets.qmd#forecasttools.data_cdc_gov_datasets) |  |
+
+## Data Processing
+
+Data transformation utilities
+
+| | |
+| --- | --- |
+| [df_aggregate_to_epiweekly](df_aggregate_to_epiweekly.qmd#forecasttools.df_aggregate_to_epiweekly) | Aggregate a dataframe of daily values (e.g. |
+| [trajectories_to_quantiles](trajectories_to_quantiles.qmd#forecasttools.trajectories_to_quantiles) | Take value column of a dataframe with |
+| [get_hubverse_table](get_hubverse_table.qmd#forecasttools.get_hubverse_table) | Takes epiweekly quantilized Polars dataframe |
+| [coalesce_common_columns](coalesce_common_columns.qmd#forecasttools.coalesce_common_columns) | Coalesce multiple columns with a common suffix into a single column. |
+
+## ArviZ Utilities
+
+Functions for working with ArviZ InferenceData objects
+
+| | |
+| --- | --- |
+| [arviz.get_all_dims](arviz.get_all_dims.qmd#forecasttools.arviz.get_all_dims) | Get all unique dimension names from an ArviZ InferenceData object. |
+| [arviz.replace_all_dim_suffix](arviz.replace_all_dim_suffix.qmd#forecasttools.arviz.replace_all_dim_suffix) | Replace dimension suffixes in an InferenceData object. |
+| [arviz.assign_coords_from_start_step](arviz.assign_coords_from_start_step.qmd#forecasttools.arviz.assign_coords_from_start_step) | Assign coordinates to a dimension based on a start date and step interval. |
+| [arviz.prune_chains_by_rel_diff](arviz.prune_chains_by_rel_diff.qmd#forecasttools.arviz.prune_chains_by_rel_diff) | Prune MCMC chains based on relative difference in log probability/likelihood. |
+
+## Simulation-Based Calibration
+
+Tools for validating Bayesian inference
+
+| | |
+| --- | --- |
+| [sbc.SBC](sbc.SBC.qmd#forecasttools.sbc.SBC) |  |
+
+## Validation
+
+Input validation utilities
+
+| | |
+| --- | --- |
+| [validate_input_type](validate_input_type.qmd#forecasttools.validate_input_type) | Checks the type of a variable and |
+| [validate_and_get_idata_group](validate_and_get_idata_group.qmd#forecasttools.validate_and_get_idata_group) | Retrieves the group from the |
+| [validate_and_get_idata_group_var](validate_and_get_idata_group_var.qmd#forecasttools.validate_and_get_idata_group_var) | Retrieves the variable from the group |
+| [validate_idata_group_var_dim](validate_idata_group_var_dim.qmd#forecasttools.validate_idata_group_var_dim) | Validates if the given dimension |
+| [validate_iter_has_expected_types](validate_iter_has_expected_types.qmd#forecasttools.validate_iter_has_expected_types) | Check if all elements in the iterable are |
+| [ensure_listlike](ensure_listlike.qmd#forecasttools.ensure_listlike) | Ensure that an object either behaves like a |
