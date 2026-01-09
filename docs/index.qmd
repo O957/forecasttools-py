@@ -1,0 +1,62 @@
+---
+title: "forecasttools-py"
+subtitle: "Python Utilities For CDC Respiratory Disease Forecasting"
+---
+
+## Overview
+
+`forecasttools-py` is a Python package that supports the CDC's Center for Forecasting and Outbreak Analytics (CFA) Predict division. It provides utilities for:
+
+- **Pre-Processing**: Data retrieval, aggregation, and transformation
+- **Post-Processing**: Converting model outputs to Hubverse submission format
+- **Validation**: Ensuring forecasts meet hub requirements
+
+## Installation
+
+Install from GitHub:
+
+```bash
+pip install git+https://github.com/CDCgov/forecasttools-py@main
+```
+
+Or with uv:
+
+```bash
+uv pip install git+https://github.com/CDCgov/forecasttools-py@main
+```
+
+## Quick Start
+
+```python
+import forecasttools
+
+# access location data for hub submissions
+locations = forecasttools.get_hub_locations("flusight")
+print(f"FluSight accepts {len(locations)} locations")
+
+# get standard quantile levels
+quantiles = forecasttools.HUBVERSE_QUANTILE_LEVELS
+print(f"Hubverse requires {len(quantiles)} quantile levels")
+
+# access pre-packaged datasets
+flu_data = forecasttools.nhsn_hosp_flu
+print(flu_data.head())
+```
+
+## Tutorials
+
+- [Constants & Hub Location Utilities](tutorials/constants_and_locations.qmd): Standard constants and location utilities for forecast hub submissions
+- [Datasets & InferenceData Creation](tutorials/datasets_and_idata_creation.qmd): Using pre-packaged datasets and creating forecasts with numpyro
+- [Simulation-Based Calibration](tutorials/sbc_model_checking.qmd): Validating Bayesian inference using SBC
+
+## API Reference
+
+See the [API Reference](reference/index.qmd) for complete documentation of all functions and constants.
+
+## Related Projects
+
+- [forecasttools (R)](https://github.com/CDCgov/forecasttools): R version of this toolkit
+- [pyrenew-hew](https://github.com/CDCgov/pyrenew-hew): CDC project using forecasttools-py
+- [FluSight-forecast-hub](https://github.com/cdcepi/FluSight-forecast-hub): CDC influenza forecast hub
+- [COVID-19-Forecast-Hub](https://github.com/CDCgov/COVID-19-Forecast-Hub): CDC COVID-19 forecast hub
+- [rsv-forecast-hub](https://github.com/CDCgov/rsv-forecast-hub): CDC RSV forecast hub

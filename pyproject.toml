@@ -24,6 +24,9 @@ dependencies = [
     "pyarrow>=21.0.0",
     "jupyter>=1.1.1",
     "rich>=14.2.0",
+    "patsy>=1.0.2",
+    "jupyter-cache>=1.0.1",
+    "quartodoc>=0.11.1",
 ]
 
 [project.optional-dependencies]
@@ -39,6 +42,9 @@ dev = [
 ]
 test = [
     "pytest>=8.3.3",
+]
+docs = [
+    "quartodoc>=0.7.0",
 ]
 
 [project.urls]
@@ -67,7 +73,7 @@ include = [
 
 [tool.deptry]
 known_first_party = ["forecasttools"]
-pep621_dev_dependency_groups = ["dev", "test"]
+pep621_dev_dependency_groups = ["dev", "test", "docs"]
 
 [tool.deptry.per_rule_ignores]
 DEP002 = ["pyarrow"]

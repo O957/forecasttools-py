@@ -1,11 +1,19 @@
 ---
-title: "Using the `SBC` class to do sim-based calibration for `numpyro` models"
-format: gfm
+title: "Simulation-Based Calibration for NumPyro Models"
+description: "Use the SBC class from forecasttools to validate Bayesian inference correctness using simulation-based calibration."
+author: "CFA Predict"
+date: last-modified
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    code-fold: false
+    code-tools: true
 engine: jupyter
 execute:
-    warning: false
-    output: false
-    cache: true
+  warning: false
+  output: false
+  cache: true
 bibliography: references.bib
 ---
 

@@ -1,16 +1,27 @@
 ---
-title: Creating InferenceData Objects and Using Forecasttools Datasets
-format: gfm
+title: "Creating InferenceData Objects and Using Forecasttools Datasets"
+description: "Learn how to use pre-packaged datasets and create forecasts with numpyro models stored as ArviZ InferenceData objects."
+author: "CFA Predict"
+date: last-modified
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    code-fold: false
+    code-tools: true
 engine: jupyter
+execute:
+  warning: false
+  echo: true
 ---
 
 This notebook covers:
 
-* Use of pre-packaged datasets in `forecasttools-py`.
-* Creation of a spline regression model using `numpyro`.
-* Storage of posterior predictive forecasts in `arviz` `InferenceData` objects.
+- Use of pre-packaged datasets in `forecasttools-py`
+- Creation of a spline regression model using `numpyro`
+- Storage of posterior predictive forecasts in `arviz` `InferenceData` objects
 
-The following are all the libraries required:
+## Setup
 
 ```{python}
 import os
@@ -26,159 +37,101 @@ import numpyro
 import numpyro.distributions as dist
 import patsy
 import polars as pl
-from numpy.typing import NDArray
 import xarray as xr
+from numpy.typing import NDArray
+from rich import print
+from rich.panel import Panel
+from rich.table import Table
+from rich.console import Console
 
+console = Console()
 xr.set_options(display_expand_data=False, display_expand_attrs=False)
 ```
 
-As per the [README](https://github.com/CDCgov/forecasttools-py/blob/main/README.md), `forecasttools-py` comes with several pre-packaged datasets.
+---
 
-<details markdown-1>
-<summary>
-Description Of The Datasets In Forecasttools
-</summary>
+## Pre-Packaged Datasets
 
-Summary of datasets:
+The `forecasttools-py` package comes with several pre-packaged datasets for experimentation and demonstration.
 
-* `forecasttools.location_table`
-  * A Polars dataframe of location abbreviations, codes, and names for Hubverse formatted forecast submissions.
-* `forecasttools.example_flusight_submission`
-  * An example Hubverse formatted influenza forecast submission (as a Polars dataframe) submitted to the FluSight Hub.
-* `forecasttools.nhsn_hosp_COVID`
-  * A Polars dataframe of NHSN COVID hospital admissions data.
-* `forecasttools.nhsn_hosp_flu`
-  * A Polars dataframe of NHSN influenza hospital admissions data.
-* `forecasttools.nhsn_flu_forecast_wo_dates`
-  * An `az.InferenceData` object containing a forecast made using NSHN influenza data for Texas.
-* `forecasttools.nhsn_flu_forecast_w_dates`
-  * An modified (with dates as coordinates) `az.InferenceData` object containing a forecast made using NSHN influenza data for Texas.
+```{python}
+table = Table(title="Forecasttools Datasets")
+table.add_column("Dataset", style="cyan")
+table.add_column("Type", style="green")
+table.add_column("Description", style="white")
 
-See below for more information on the datasets.
+datasets = [
+    ("location_table", "pl.DataFrame", "Location codes, abbreviations, and names for Hubverse submissions"),
+    ("example_flusight_submission", "pl.DataFrame", "Example Hubverse influenza forecast submission"),
+    ("nhsn_hosp_COVID", "pl.DataFrame", "NHSN COVID hospital admissions data"),
+    ("nhsn_hosp_flu", "pl.DataFrame", "NHSN influenza hospital admissions data"),
+    ("nhsn_flu_forecast_wo_dates", "az.InferenceData", "Influenza forecast for Texas (without dates)"),
+    ("nhsn_flu_forecast_w_dates", "az.InferenceData", "Influenza forecast for Texas (with dates as coordinates)"),
+]
 
-## Location Table
+for name, dtype, desc in datasets:
+    table.add_row(name, dtype, desc)
 
-The location table contains abbreviations, codes, and extended names for the US jurisdictions for which the FluSight and COVID forecasting hubs require users to generate forecasts.
+console.print(table)
+```
 
+### Location Table
 
-The location table is stored in `forecasttools-py` as a `polars` dataframe and is accessed via:
+The location table contains abbreviations, codes, and extended names for US jurisdictions required by the FluSight and COVID forecasting hubs.
 
 ```{python}
 loc_table = forecasttools.location_table
-print(loc_table)
+console.print(Panel(str(loc_table.head(10)), title="Location Table (first 10 rows)"))
 ```
 
-Using `./forecasttools/data.py`, the location table was created by running the following:
+### Example FluSight Hub Submission
 
-```python
-make_census_dataset(
-    file_save_path=os.path.join(
-        os.getcwd(),
-        "location_table.csv"
-    ),
-)
-```
-
-## Example FluSight Hub Submission
-
-The example FluSight submission comes from the [following 2023-24 submission](https://raw.githubusercontent.com/cdcepi/FluSight-forecast-hub/main/model-output/cfa-flumech/2023-10-14-cfa-flumech.csv).
-
-The example FluSight submission is stored in `forecasttools-py` as a `polars` dataframe and is accessed via:
+The example FluSight submission comes from a [2023-24 cfa-flumech submission](https://raw.githubusercontent.com/cdcepi/FluSight-forecast-hub/main/model-output/cfa-flumech/2023-10-14-cfa-flumech.csv).
 
 ```{python}
 submission = forecasttools.example_flusight_submission
-print(submission)
+console.print(Panel(str(submission.head(10)), title="Example FluSight Submission (first 10 rows)"))
 ```
 
-Using `data.py`, the example FluSight submission was created by running the following:
+### NHSN Hospital Admissions Data
 
-```python
-get_and_save_flusight_submission(
-    file_save_path=os.path.join(
-        os.getcwd(),
-        "example_flusight_submission.csv"
-    ),
-)
-```
-
-## NHSN COVID And Flu Hospital Admissions
-
-NHSN hospital admissions fitting data for COVID and Flu is included in `forecasttools-py` as well, for user experimentation.
-
-This data:
-
-* Is current as of `2024-04-27`.
-* Comes from the website [HealthData.gov COVID-19 Reported Patient Impact and Hospital Capacity by State Timeseries](https://healthdata.gov/Hospital/COVID-19-Reported-Patient-Impact-and-Hospital-Capa/g62h-syeh).
-
-For influenza, the `previous_day_admission_influenza_confirmed` column is retained and for COVID the `previous_day_admission_adult_covid_confirmed` column is retained. As can be seen in the example below, some early dates for each jurisdiction do not have data.
-
-The fitting data is stored in `forecasttools-py` as a `polars` dataframe and is accessed via:
+NHSN hospital admissions data for COVID and influenza is included for experimentation. This data is current as of 2024-04-27 and comes from [HealthData.gov](https://healthdata.gov/Hospital/COVID-19-Reported-Patient-Impact-and-Hospital-Capa/g62h-syeh).
 
 ```{python}
-# access COVID data
 covid_nhsn_data = forecasttools.nhsn_hosp_COVID
-
-# access flu data
 flu_nhsn_data = forecasttools.nhsn_hosp_flu
 
-# display flu data
-print(flu_nhsn_data)
+console.print(Panel(str(flu_nhsn_data.head(10)), title="NHSN Flu Hospitalizations (first 10 rows)"))
 ```
 
-The data was created by placing a csv file called `NHSN_RAW_20240926.csv` (the full NHSN dataset) into `./forecasttools/` and running, in `data.py`, the following:
+### Example InferenceData Forecasts
 
-```python
-# generate COVID dataset
-make_nshn_fitting_dataset(
-    dataset="COVID",
-    nhsn_dataset_path="NHSN_RAW_20240926.csv",
-    file_save_path=os.path.join(
-        os.getcwd(),
-        "nhsn_hosp_COVID.csv"
-    )
-)
-
-# generate flu dataset
-make_nshn_fitting_dataset(
-    dataset="flu",
-    nhsn_dataset_path="NHSN_RAW_20240926.csv",
-    file_save_path=os.path.join(
-        os.getcwd(),
-        "nhsn_hosp_flu.csv"
-    )
-)
-```
-
-## Influenza Hospitalizations Forecast(s)
-
-Two example forecasts stored in Arviz `InferenceData` objects are included for vignettes and user experimentation. Both are 28 day influenza hospital admissions forecasts for Texas made using a spline regression model fitted to NHSN data between 2022-08-08 and 2022-12-08. The only difference between the forecasts is that `example_flu_forecast_w_dates.nc` has had dates added as its coordinates (this is not a native Arviz feature).
-
-The forecast `idata`s are accessed via:
+Two example forecasts are stored as ArviZ `InferenceData` objects. Both are 28-day influenza hospital admissions forecasts for Texas using a spline regression model fitted to NHSN data between 2022-08-08 and 2022-12-08.
 
 ```{python}
-# idata with dates as coordinates
 idata_w_dates = forecasttools.nhsn_flu_forecast_w_dates
-print(idata_w_dates)
+console.print(Panel(str(idata_w_dates), title="InferenceData with Dates"))
 ```
 
 ```{python}
-# show dates
+# show date coordinates
 print(idata_w_dates["observed_data"]["obs"]["obs_dim_0"][:15])
 ```
 
 ```{python}
-# idata without dates as coordinates
 idata_wo_dates = forecasttools.nhsn_flu_forecast_wo_dates
 print(idata_wo_dates["observed_data"]["obs"]["obs_dim_0"][:15])
 ```
 
-The forecast was generated following the creation of `nhsn_hosp_flu.csv` (see previous section) by running `data.py` with the following added:
+---
 
-</details>
+## Building a Spline Regression Forecast
 
-In the remainder of this notebook, the author demonstrates use of the NHSN COVID and influenza data, or `forecasttools.nhsn_hosp_COVID` and `forecasttools.nhsn_hosp_flu`, respectively, in making forecasts using a spline regression model.
+In this section, we demonstrate using the NHSN hospital admissions data to create forecasts with a spline regression model using `numpyro`.
 
-Before proceeding further, the author has re-instantiates some helper functions not exposed to the user in `forecasttools-py`:
+### Helper Functions
+
+First, we define helper functions for file validation and plotting:
 
 ```{python}
 def check_file_save_path(
@@ -302,7 +255,9 @@ def plot_and_or_save_forecast(
     plt.show()
 ```
 
-Now, the spline regression model and its associated basis function:
+### Model Definition
+
+The spline regression model uses a negative binomial likelihood with spline basis functions:
 
 ```{python}
 def model(basis_matrix, y=None):
@@ -332,7 +287,9 @@ def spline_basis(X, degree: int = 4, df: int = 8) -> NDArray:
     return np.array(basis)
 ```
 
-The function to run the spline regression model:
+### Forecast Function
+
+The `make_forecast` function ties together data preparation, model fitting, and visualization:
 
 ```{python}
 def make_forecast(
@@ -474,10 +431,12 @@ def make_forecast(
         return idata
 ```
 
-Generate the forecast and display:
+### Running the Forecast
+
+Generate a 28-day influenza forecast for Texas:
 
 ```{python}
-make_forecast(
+idata = make_forecast(
     nhsn_data=forecasttools.nhsn_hosp_flu,
     start_date="2022-08-08",
     end_date="2022-12-08",
@@ -489,3 +448,5 @@ make_forecast(
     use_log=False,
 )
 ```
+
+The resulting `InferenceData` object contains the posterior samples, posterior predictive distribution, and prior samples, which can be used for further analysis or conversion to Hubverse format.

@@ -1,0 +1,9 @@
+# quarto
+/.quarto/
+_site/
+
+# quartodoc auto-generated files (keep index.qmd)
+/reference/*.qmd
+!/reference/index.qmd
+/reference/_sidebar.yml
+/reference/objects.json

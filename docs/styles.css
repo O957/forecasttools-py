@@ -1,0 +1,21 @@
+/* forecasttools-py documentation styles */
+
+/* code block styling */
+pre code {
+  font-size: 0.9em;
+}
+
+/* table styling */
+table {
+  margin: 1em 0;
+}
+
+/* callout styling */
+.callout {
+  margin: 1em 0;
+}
+
+/* sidebar adjustments */
+.sidebar nav {
+  font-size: 0.9em;
+}

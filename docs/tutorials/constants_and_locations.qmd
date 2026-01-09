@@ -1,7 +1,18 @@
 ---
-title: Constants & Hub Location Utilities
-format: gfm
+title: "Constants & Hub Location Utilities"
+description: "Standard constants and location utilities for CDC respiratory disease forecast hub submissions."
+author: "CFA Predict"
+date: last-modified
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    code-fold: false
+    code-tools: true
 engine: jupyter
+execute:
+  warning: false
+  echo: true
 ---
 
 This notebook demonstrates the constants and hub location utilities provided by `forecasttools`. These utilities standardize common values used across CDC respiratory disease forecast hubs and simplify working with hub-specific location requirements.

@@ -172,14 +172,11 @@ cython_debug/
 
 poetry.lock
 /.quarto/
-_site
-/_site
-/_freeze
-_freeze
+_site/
+_freeze/
 .DS_Store
 DS_Store
 _book/
-_book
 *.csv
 /.vscode/
 **/*_files*/
